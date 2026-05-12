@@ -131,6 +131,37 @@ flowchart LR
 
 ---
 
+## Manejo de excepciones
+
+```mermaid
+flowchart LR
+    EXC["Domain Exception"] --> AV["@ControllerAdvice"] --> DTO["Error Response DTO"]
+```
+
+Las excepciones de dominio se lanzan desde el dominio y se capturan en un único punto de la capa de presentación. El use case **no las atrapa**: las deja propagarse.
+
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handle(UserNotFoundException ex) {
+        return ResponseEntity.status(404).body(new ErrorResponse(ex.getMessage()));
+    }
+}
+```
+
+| Excepción                       | HTTP | Capa que la lanza |
+|---------------------------------|------|-------------------|
+| `UserNotFoundException`         | 404  | Domain            |
+| `UserNotActiveException`        | 422  | Domain            |
+| `PaymentLimitExceededException` | 422  | Domain            |
+| `IllegalArgumentException`      | 400  | Domain            |
+
+**Regla:** una excepción por invariante. El dominio lanza, la presentación traduce. Nunca al revés.
+
+---
+
 ## Consistencia y fiabilidad (Kleppmann)
 
 ### Doble write: el problema
